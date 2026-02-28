@@ -2,317 +2,230 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YT Loader HD — Скачать видео и музыку с YouTube</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YT Private • Скачивай приватно</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
-        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); }
-        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
-        .download-btn { transition: all 0.2s; }
-        .download-btn:hover { transform: scale(1.05); }
+        .glass { background: rgba(255,255,255,0.06); backdrop-filter: blur(16px); }
+        iframe { border-radius: 16px; box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.5); }
+        .btn-big { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-big:hover { transform: translateY(-3px) scale(1.03); }
+        .mobile-fix { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 min-h-screen">
-    <div class="max-w-2xl mx-auto px-4 py-8">
+<body class="bg-zinc-950 text-zinc-100 min-h-screen pb-12">
+    <div class="max-w-xl mx-auto px-5 pt-8">
         <!-- Header -->
-        <div class="flex items-center justify-between mb-12">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
-                    ▶
-                </div>
-                <div>
-                    <h1 class="text-4xl font-bold tracking-tighter">YT Loader HD</h1>
-                    <p class="text-zinc-400 text-sm -mt-1">Видео • MP3 • Альбомы в максимальном качестве</p>
-                </div>
+        <div class="flex items-center gap-4 mb-10">
+            <div class="w-14 h-14 bg-gradient-to-br from-red-500 via-pink-500 to-purple-500 rounded-3xl flex items-center justify-center text-4xl shadow-xl">
+                ▶
             </div>
-            <div class="text-xs text-zinc-500 flex items-center gap-2">
-                <i class="fa-solid fa-shield-halved"></i>
-                <span>Без рекламы • Без регистрации</span>
+            <div>
+                <h1 class="text-4xl font-bold tracking-tighter">YT Private</h1>
+                <p class="text-emerald-400 text-sm font-medium">Максимальная приватность • Без API • Без трекинга</p>
             </div>
         </div>
 
         <!-- Input -->
-        <div class="glass border border-zinc-800 rounded-3xl p-8 mb-8">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-semibold mb-2">Скачивай всё с YouTube</h2>
-                <p class="text-zinc-400">Вставь ссылку на видео, Shorts или плейлист</p>
-            </div>
-            
-            <div class="flex gap-3">
+        <div class="glass border border-zinc-800 rounded-3xl p-6 mb-8">
+            <p class="text-zinc-400 mb-4 text-center text-sm">Вставь любую ссылку YouTube</p>
+            <div class="flex flex-col sm:flex-row gap-3">
                 <input id="urlInput" 
                        type="text" 
                        placeholder="https://youtube.com/watch?v=..." 
-                       class="flex-1 bg-zinc-900 border border-zinc-700 focus:border-red-500 focus:outline-none rounded-2xl px-6 py-5 text-lg placeholder-zinc-500">
-                <button onclick="analyzeURL()" 
-                        class="bg-red-600 hover:bg-red-700 px-10 rounded-2xl font-semibold flex items-center gap-2 transition-all active:scale-95">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <span>Анализировать</span>
+                       class="flex-1 bg-zinc-900 border border-zinc-700 focus:border-emerald-500 rounded-2xl px-6 py-5 text-base placeholder-zinc-500 outline-none mobile-fix">
+                <button onclick="prepareDownload()" 
+                        class="bg-emerald-600 hover:bg-emerald-500 font-semibold px-8 py-5 rounded-2xl flex items-center justify-center gap-2 btn-big mobile-fix">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Подготовить</span>
                 </button>
-            </div>
-            
-            <div class="text-xs text-zinc-500 mt-4 flex items-center gap-4 justify-center">
-                <div class="flex items-center gap-1.5">
-                    <i class="fa-solid fa-video"></i>
-                    <span>Видео до 8K</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <i class="fa-solid fa-music"></i>
-                    <span>MP3 320 kbps</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <i class="fa-solid fa-list"></i>
-                    <span>Плейлисты / Альбомы</span>
-                </div>
             </div>
         </div>
 
         <!-- Result -->
         <div id="result" class="hidden">
-            <div class="glass border border-zinc-800 rounded-3xl overflow-hidden mb-8">
-                <!-- Preview -->
-                <div class="relative">
-                    <img id="thumbnail" class="w-full aspect-video object-cover">
-                    <div class="absolute bottom-4 left-4 bg-black/70 px-3 py-1 rounded-xl text-xs font-medium flex items-center gap-2">
-                        <i class="fa-solid fa-clock"></i>
-                        <span id="duration"></span>
-                    </div>
+            <!-- Embed + Preview -->
+            <div class="mb-8">
+                <div class="aspect-video bg-black rounded-3xl overflow-hidden mb-4">
+                    <iframe id="embed" 
+                            width="100%" 
+                            height="100%" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen></iframe>
                 </div>
-                
-                <div class="p-6">
-                    <h3 id="title" class="font-semibold text-xl leading-tight mb-2 line-clamp-2"></h3>
-                    <p id="author" class="text-zinc-400 text-sm"></p>
+                <img id="thumbnail" 
+                     class="w-full rounded-3xl shadow-2xl" 
+                     alt="thumbnail">
+            </div>
+
+            <div class="glass border border-zinc-800 rounded-3xl p-6 mb-8">
+                <h2 id="videoTitle" class="font-semibold text-xl mb-1">Видео с YouTube</h2>
+                <p class="text-zinc-400 text-sm">Скопируй ссылку ниже или используй кнопки</p>
+                <div class="mt-4 bg-zinc-900 border border-zinc-700 rounded-2xl p-4 font-mono text-xs text-emerald-300 break-all" id="cleanURL"></div>
+            </div>
+
+            <!-- yt-dlp — самый приватный способ -->
+            <div class="mb-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <i class="fa-solid fa-lock text-emerald-400"></i>
+                    <span class="font-semibold text-emerald-400">САМЫЙ ПРИВАТНЫЙ СПОСОБ</span>
                 </div>
-            </div>
-
-            <!-- Tabs -->
-            <div class="flex border-b border-zinc-800 mb-6">
-                <button onclick="switchTab(0)" id="tab0"
-                        class="tab-btn flex-1 py-4 font-medium border-b-2 border-red-500 text-red-500">Видео</button>
-                <button onclick="switchTab(1)" id="tab1"
-                        class="tab-btn flex-1 py-4 font-medium text-zinc-400">Аудио (MP3)</button>
-            </div>
-
-            <!-- Video Tab -->
-            <div id="videoTab" class="grid grid-cols-2 gap-4">
-                <button onclick="getDownloadLink(false, '144')" 
-                        class="download-btn glass border border-zinc-700 hover:border-red-500 rounded-2xl p-5 text-left group">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="text-sm text-zinc-400">144p</div>
-                            <div class="text-lg font-semibold text-white">Низкое</div>
-                        </div>
-                        <i class="fa-solid fa-download text-2xl text-zinc-500 group-hover:text-red-500 transition-colors"></i>
-                    </div>
-                </button>
-                
-                <button onclick="getDownloadLink(false, '480')" 
-                        class="download-btn glass border border-zinc-700 hover:border-red-500 rounded-2xl p-5 text-left group">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="text-sm text-zinc-400">480p</div>
-                            <div class="text-lg font-semibold text-white">Стандарт</div>
-                        </div>
-                        <i class="fa-solid fa-download text-2xl text-zinc-500 group-hover:text-red-500 transition-colors"></i>
-                    </div>
-                </button>
-                
-                <button onclick="getDownloadLink(false, '720')" 
-                        class="download-btn glass border border-zinc-700 hover:border-red-500 rounded-2xl p-5 text-left group">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="text-sm text-zinc-400">720p</div>
-                            <div class="text-lg font-semibold text-white">HD</div>
-                        </div>
-                        <i class="fa-solid fa-download text-2xl text-zinc-500 group-hover:text-red-500 transition-colors"></i>
-                    </div>
-                </button>
-                
-                <button onclick="getDownloadLink(false, '1080')" 
-                        class="download-btn glass border border-zinc-700 hover:border-red-500 rounded-2xl p-5 text-left group bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="text-sm text-red-400">1080p</div>
-                            <div class="text-lg font-semibold text-white">Full HD <span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded">Рекоменд.</span></div>
-                        </div>
-                        <i class="fa-solid fa-download text-2xl text-red-500"></i>
-                    </div>
-                </button>
-            </div>
-
-            <!-- Audio Tab (hidden by default) -->
-            <div id="audioTab" class="hidden">
                 <div class="grid grid-cols-1 gap-4">
-                    <button onclick="getDownloadLink(true, '320')" 
-                            class="download-btn glass border border-emerald-500 hover:border-emerald-400 rounded-3xl p-8 flex items-center justify-between group">
-                        <div class="flex items-center gap-5">
-                            <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-3xl">🎵</div>
+                    <!-- Видео -->
+                    <div onclick="copyCommand(false)" 
+                         class="glass border border-zinc-700 hover:border-emerald-500 rounded-3xl p-6 cursor-pointer btn-big mobile-fix">
+                        <div class="flex justify-between">
                             <div>
-                                <div class="font-semibold text-xl">MP3 320 kbps</div>
-                                <div class="text-emerald-400 text-sm">Высокое качество звука • Идеально для музыки и альбомов</div>
+                                <div class="font-semibold text-lg">Видео в максимальном качестве</div>
+                                <div class="text-xs text-zinc-400 mt-1">yt-dlp (до 8K + аудио)</div>
                             </div>
+                            <i class="fa-solid fa-copy text-3xl text-zinc-400"></i>
                         </div>
-                        <i class="fa-solid fa-download text-4xl text-emerald-500 group-hover:rotate-12 transition-transform"></i>
+                        <div class="mt-4 text-[10px] font-mono bg-black/50 p-3 rounded-2xl text-emerald-300 overflow-x-auto" id="cmdVideo"></div>
+                    </div>
+                    
+                    <!-- Аудио -->
+                    <div onclick="copyCommand(true)" 
+                         class="glass border border-zinc-700 hover:border-emerald-500 rounded-3xl p-6 cursor-pointer btn-big mobile-fix">
+                        <div class="flex justify-between">
+                            <div>
+                                <div class="font-semibold text-lg">Только музыка • MP3 320kbps</div>
+                                <div class="text-xs text-zinc-400 mt-1">Идеально для песен и альбомов</div>
+                            </div>
+                            <i class="fa-solid fa-copy text-3xl text-zinc-400"></i>
+                        </div>
+                        <div class="mt-4 text-[10px] font-mono bg-black/50 p-3 rounded-2xl text-emerald-300 overflow-x-auto" id="cmdAudio"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Онлайн-сервисы (быстро) -->
+            <div class="mb-10">
+                <p class="text-zinc-400 text-xs uppercase tracking-widest mb-4 text-center">Или быстро онлайн (в новой вкладке)</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="openSSYoutube()" 
+                            class="btn-big glass border border-zinc-700 hover:border-orange-400 rounded-3xl py-6 flex flex-col items-center gap-2">
+                        <span class="text-3xl">🔗</span>
+                        <span class="font-semibold">ssYouTube</span>
+                        <span class="text-[10px] text-orange-400">самый быстрый</span>
                     </button>
                     
-                    <button onclick="getDownloadLink(true, '128')" 
-                            class="download-btn glass border border-zinc-700 hover:border-emerald-500 rounded-3xl p-8 flex items-center justify-between group">
-                        <div class="flex items-center gap-5">
-                            <div class="w-14 h-14 bg-zinc-700 rounded-2xl flex items-center justify-center text-3xl opacity-70">🎵</div>
-                            <div>
-                                <div class="font-semibold text-xl">MP3 128 kbps</div>
-                                <div class="text-zinc-400 text-sm">Меньший размер файла</div>
-                            </div>
-                        </div>
-                        <i class="fa-solid fa-download text-4xl text-zinc-500 group-hover:rotate-12 transition-transform"></i>
+                    <button onclick="openY2mate()" 
+                            class="btn-big glass border border-zinc-700 hover:border-pink-400 rounded-3xl py-6 flex flex-col items-center gap-2">
+                        <span class="text-3xl">📥</span>
+                        <span class="font-semibold">y2mate</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Status -->
-            <div id="status" class="mt-8 text-center text-sm text-zinc-400 hidden">
-                <i class="fa-solid fa-spinner fa-spin mr-2"></i>
-                Получаем ссылку на скачивание...
+            <!-- Для мобильных -->
+            <div class="text-center text-xs text-zinc-500 border-t border-zinc-800 pt-8">
+                <p class="mb-3 font-medium text-emerald-300">На телефоне рекомендуем:</p>
+                <div class="flex justify-center gap-6 text-[13px]">
+                    <a href="https://newpipe.net/" target="_blank" class="hover:text-white flex flex-col items-center gap-1">
+                        <span class="text-xl">📱</span>
+                        <span>NewPipe</span>
+                    </a>
+                    <a href="https://github.com/yt-dlp/yt-dlp" target="_blank" class="hover:text-white flex flex-col items-center gap-1">
+                        <span class="text-xl">💻</span>
+                        <span>yt-dlp + Termux</span>
+                    </a>
+                </div>
+                <p class="mt-8">Никаких API • Никаких серверов • 100% приватно</p>
+                <p class="mt-1 text-[10px]">Просто сохрани как index.html на GitHub Pages</p>
             </div>
         </div>
 
-        <!-- Info -->
-        <div class="text-center text-xs text-zinc-500 mt-16">
-            <p>Сайт работает полностью статично через публичный API Cobalt.tools</p>
-            <p class="mt-1">Уважайте авторские права • Только для личного использования</p>
-            <p class="mt-4">Для GitHub Pages — просто сохрани как <strong>index.html</strong></p>
+        <!-- Footer hint -->
+        <div class="text-center text-[10px] text-zinc-600 mt-16">
+            Работает оффлайн • Только клиентский JavaScript
         </div>
     </div>
 
     <script>
         function tailwindInit() {
-            tailwind.config = {
-                content: [],
-                theme: {
-                    extend: {}
-                }
-            }
+            tailwind.config = { content: [] };
         }
         tailwindInit();
 
         let currentURL = '';
-        let currentTitle = '';
-        let currentThumb = '';
-
-        function switchTab(n) {
-            document.querySelectorAll('.tab-btn').forEach((el, i) => {
-                if (i === n) {
-                    el.classList.add('border-red-500', 'text-red-500');
-                    el.classList.remove('text-zinc-400');
-                } else {
-                    el.classList.remove('border-red-500', 'text-red-500');
-                    el.classList.add('text-zinc-400');
-                }
-            });
-            
-            document.getElementById('videoTab').classList.toggle('hidden', n !== 0);
-            document.getElementById('audioTab').classList.toggle('hidden', n !== 1);
-        }
-
-        async function analyzeURL() {
-            const input = document.getElementById('urlInput').value.trim();
-            if (!input) return alert('Вставь ссылку на YouTube!');
-            
-            if (!input.includes('youtube.com') && !input.includes('youtu.be')) {
-                return alert('Это не ссылка на YouTube!');
-            }
-            
-            currentURL = input;
-            document.getElementById('result').classList.remove('hidden');
-            document.getElementById('status').classList.add('hidden');
-            
-            // Получаем метаданные через noembed (CORS-friendly)
-            try {
-                const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(input)}`);
-                const data = await res.json();
-                
-                currentTitle = data.title || 'Видео с YouTube';
-                currentThumb = data.thumbnail_url || `https://i.ytimg.com/vi/${getVideoID(input)}/maxresdefault.jpg`;
-                
-                document.getElementById('thumbnail').src = currentThumb;
-                document.getElementById('title').textContent = currentTitle;
-                document.getElementById('author').textContent = data.author_name || 'YouTube';
-                document.getElementById('duration').textContent = data.duration ? `${Math.floor(data.duration/60)}:${(data.duration%60).toString().padStart(2,'0')}` : '—';
-                
-                // По умолчанию открываем вкладку Видео
-                switchTab(0);
-            } catch(e) {
-                // Fallback
-                document.getElementById('title').textContent = 'Видео загружено';
-                document.getElementById('thumbnail').src = `https://i.ytimg.com/vi/${getVideoID(input)}/hqdefault.jpg`;
-            }
-        }
+        let currentID = '';
 
         function getVideoID(url) {
-            const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : '';
-        }
-
-        async function getDownloadLink(isAudioOnly, quality) {
-            const statusEl = document.getElementById('status');
-            statusEl.classList.remove('hidden');
-            
-            const payload = {
-                url: currentURL,
-                isAudioOnly: isAudioOnly,
-                aFormat: isAudioOnly ? "mp3" : "mp4",
-                vQuality: isAudioOnly ? "" : quality,
-                vCodec: "h264",
-                filenameStyle: "pretty",
-                isNoTTWatermark: true
-            };
-            
-            try {
-                const response = await fetch('https://api.cobalt.tools/api/json', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const data = await response.json();
-                
-                if (data.status === 'stream' || data.status === 'redirect') {
-                    const downloadUrl = data.url;
-                    statusEl.innerHTML = `<span class="text-emerald-400">Готово! Начинается скачивание...</span>`;
-                    
-                    // Прямая скачка
-                    const a = document.createElement('a');
-                    a.href = downloadUrl;
-                    a.download = currentTitle ? currentTitle.replace(/[^a-zA-Z0-9]/g, '_') + (isAudioOnly ? '.mp3' : '.mp4') : 'youtube_download';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    
-                    setTimeout(() => {
-                        statusEl.classList.add('hidden');
-                        statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>Получаем ссылку на скачивание...`;
-                    }, 3000);
-                } else {
-                    alert('Не удалось получить ссылку. Попробуй другой сервис или обнови страницу.');
-                    statusEl.classList.add('hidden');
-                }
-            } catch (err) {
-                console.error(err);
-                statusEl.classList.add('hidden');
-                alert('Ошибка соединения с API. Попробуй позже или используй альтернативный сервис.');
+            url = url.trim();
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
+                /youtube\.com\/shorts\/([^&\n?#]+)/
+            ];
+            for (let pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) return match[1].substring(0, 11);
             }
+            return null;
         }
 
-        // Enter key support
-        document.getElementById('urlInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') analyzeURL();
+        function prepareDownload() {
+            const input = document.getElementById('urlInput').value.trim();
+            if (!input) return alert('Вставь ссылку на YouTube');
+
+            const id = getVideoID(input);
+            if (!id) return alert('Не удалось распознать YouTube ссылку');
+
+            currentURL = input;
+            currentID = id;
+
+            // Embed
+            document.getElementById('embed').src = `https://www.youtube.com/embed/${id}?rel=0`;
+
+            // Thumbnail (max resolution)
+            const thumb = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+            const img = document.getElementById('thumbnail');
+            img.src = thumb;
+            img.onerror = () => { img.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`; };
+
+            // Clean URL
+            document.getElementById('cleanURL').textContent = `https://youtube.com/watch?v=${id}`;
+
+            // Commands
+            document.getElementById('cmdVideo').textContent = `yt-dlp -f "bestvideo+bestaudio" "${currentURL}"`;
+            document.getElementById('cmdAudio').textContent = `yt-dlp -x --audio-format mp3 --audio-quality 0 "${currentURL}"`;
+
+            document.getElementById('result').classList.remove('hidden');
+            window.scrollTo({ top: 300, behavior: 'smooth' });
+        }
+
+        function copyCommand(isAudio) {
+            const cmd = isAudio 
+                ? `yt-dlp -x --audio-format mp3 --audio-quality 0 "${currentURL}"`
+                : `yt-dlp -f "bestvideo+bestaudio/best" "${currentURL}"`;
+            
+            navigator.clipboard.writeText(cmd).then(() => {
+                const msg = document.createElement('div');
+                msg.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:9999px;font-size:14px;box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.3);z-index:999';
+                msg.textContent = '✅ Команда скопирована! Вставь в терминал';
+                document.body.appendChild(msg);
+                setTimeout(() => msg.remove(), 2800);
+            });
+        }
+
+        function openSSYoutube() {
+            const ssURL = currentURL.replace('youtube.com', 'ssyoutube.com').replace('youtu.be', 'ssyoutube.com');
+            window.open(ssURL, '_blank');
+        }
+
+        function openY2mate() {
+            window.open(`https://www.y2mate.com/youtube/${currentID}`, '_blank');
+        }
+
+        // Enter key
+        document.getElementById('urlInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') prepareDownload();
         });
 
-        // Auto-focus
+        // Focus input on load
         window.onload = () => {
             document.getElementById('urlInput').focus();
         };
