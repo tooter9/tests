@@ -26,11 +26,12 @@ EXIFOR_VERSION = "1.3.0"
 
 A = "cyan"
 G = "#00c87a"
-Y = "yellow"
+Y = "#e3cd0b"
 R = "red"
 D = "bright_black"
 W = "white"
-P = "#008000"
+P = "#800071"
+T = "#007c80"
 
 MEDIA = {
     ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".heic", ".heif",
@@ -799,7 +800,7 @@ def _edit_multi(et: ET, path: str):
 
 def act_zip(et: ET):
     while True:
-        header("ZIP Cleaner", "Strip metadata from every file inside a ZIP archive")
+        header("ZIP Strip MetaData", "From every file inside")
         C.print(f"  [{Y}]How it works:[/]")
         C.print(f"  [{D}]  Select a ZIP file[/]")
         C.print(f"  [{D}]  Files are extracted to a temporary folder[/]")
@@ -807,8 +808,8 @@ def act_zip(et: ET):
         C.print(f"  [{D}]  Files are repacked into a clean new ZIP[/]")
         C.print(f"  [{D}]  Temporary folder is removed[/]")
         C.print()
-        C.print(f"  [{D}]1[/]  Clean ZIP  (remove ALL metadata from every file)")
-        C.print(f"  [{D}]2[/]  Inspect ZIP  (check which files have metadata)")
+        C.print(f"  [{D}]1[/]  Remove ALL MetaData")
+        C.print(f"  [{D}]2[/]  Check which files have MetaData")
         C.print(f"  [{D}]0[/]  Back to main menu")
         rule()
         C.print(f"  [{A}]→[/]  ", end="")
@@ -820,7 +821,7 @@ def act_zip(et: ET):
         if raw not in ("1", "2"):
             err("Invalid choice — enter 1, 2, or 0"); pause(); continue
 
-        path = browse(title="ZIP Cleaner  —  select a ZIP file")
+        path = browse(title="ZIP Clean  —  select a ZIP file")
         if not path:
             continue
 
@@ -830,7 +831,7 @@ def act_zip(et: ET):
             continue
 
         if raw == "2":
-            header("ZIP: Inspect Metadata", os.path.basename(path))
+            header("ZIP: Inspect MetaData", os.path.basename(path))
             with spin("Analysing ZIP contents...") as p:
                 p.add_task("", total=None)
                 try:
@@ -862,7 +863,7 @@ def act_zip(et: ET):
             continue
 
         if raw == "1":
-            header("ZIP Cleaner", os.path.basename(path))
+            header("ZIP Clean", os.path.basename(path))
 
             try:
                 with zipfile.ZipFile(path, "r") as zf:
@@ -902,7 +903,7 @@ def act_zip(et: ET):
 
             show_result(
                 True,
-                "ZIP Cleaner",
+                "ZIP Clean",
                 path,
                 out_path,
                 None,
@@ -939,7 +940,7 @@ def act_folder(et: ET):
 
         try:
             if raw == "1":
-                if not yesno("Remove ALL metadata from ALL files in this folder?", default=False):
+                if not yesno("Remove ALL MetaData from ALL files in this folder?", default=False):
                     warn("Cancelled"); continue
                 with spin("Processing folder...") as p:
                     p.add_task("", total=None)
@@ -978,12 +979,12 @@ def act_folder(et: ET):
 
 
 def act_export(et: ET):
-    path = browse(title="Export Metadata  —  select a file")
+    path = browse(title="Export MetaData  —  select a file")
     if not path:
         return
 
     while True:
-        header("Export Metadata", os.path.basename(path))
+        header("Export MetaData", os.path.basename(path))
         C.print(f"  [{D}]1[/]  Save as JSON")
         C.print(f"  [{D}]2[/]  Save as CSV")
         C.print(f"  [{D}]0[/]  Back to main menu")
@@ -1013,9 +1014,9 @@ def act_export(et: ET):
                     et.export_json(path, out)
                 else:
                     et.export_csv(path, out)
-                show_result(True, "Export metadata", path, out, None, f"Size: {sz(out)}")
+                show_result(True, "Export MetaData", path, out, None, f"Size: {sz(out)}")
             except Exception as e:
-                show_result(False, "Export metadata", path, out, None, str(e))
+                show_result(False, "Export MetaData", path, out, None, str(e))
         pause()
         return
 
@@ -1037,7 +1038,7 @@ def act_copy(et: ET):
     C.print(f"  [{D}]From:[/]  [{Y}]{escape(src)}[/]")
     C.print(f"  [{D}]To:  [/]  [{Y}]{escape(dst)}[/]\n")
 
-    if not yesno("Copy metadata from source to destination?"):
+    if not yesno("Copy MetaData from source to destination?"):
         warn("Cancelled"); return
 
     keep_backup = yesno("Keep a backup of the destination file?", default=False)
@@ -1056,12 +1057,12 @@ def act_copy(et: ET):
 MENU = [
     ("1", "View MetaData",                    act_view,   P),
     ("2", "Strip MetaData",                   act_strip,  R),
-    ("3", "ZIP MetaData",                     act_zip,    A),
-    ("4", "GPS MetaData",                     act_gps,    Y),
-    ("5", "Edit File Tags",                   act_edit,   W),
-    ("6", "Batch Folder Processing",          act_folder, W),
-    ("7", "Export MetaData",                  act_export, W),
-    ("8", "Copy Tags Between Files",          act_copy,   W),
+    ("3", "ZIP MetaData",                     act_zip,    R),
+    ("4", "GPS MetaData",                     act_gps,    R),
+    ("5", "Edit File Tags",                   act_edit,   Y),
+    ("6", "Batch Folder Processing",          act_folder, T),
+    ("7", "Export MetaData",                  act_export, A),
+    ("8", "Copy Tags Between Files",          act_copy,   G),
 ]
 
 
@@ -1075,7 +1076,7 @@ def main():
         except Exception:
             ver = "?"
 
-        C.print(f"  [{D}]Exifor {EXIFOR_VERSION}[/]  [{D}]·[/]  [{G}]ExifTool {ver}[/]\n")
+        C.print(f"  [{D}]ExiFor {EXIFOR_VERSION}[/]  [{D}]·[/]  [{G}]ExifTool {ver}[/]\n")
 
         for key, label, _, color in MENU:
             C.print(f"  [{D}]{key}[/]  [{color}]{label}[/]")
