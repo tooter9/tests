@@ -24,14 +24,14 @@ C = Console(highlight=False)
 
 EXIFOR_VERSION = "1.3.0"
 
-A = "cyan"
-G = "#00c87a"
-Y = "#e3cd0b"
-R = "red"
-D = "bright_black"
-W = "white"
-P = "#800071"
-T = "#007c80"
+A = "#00E5FF"
+G = "#00D26A"
+Y = "#FFD400"
+R = "#FF3B3F"
+D = "#1E1E2E"
+W = "#F8F9FA"
+P = "#FF4FD8"
+T = "#00B3B8"
 
 MEDIA = {
     ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".heic", ".heif",
