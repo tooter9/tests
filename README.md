@@ -10,7 +10,7 @@
 ## Установка
 
 ```sh
-git clone https://github.com/ВАШ_НИК/exifor.git
+git clone https://github.com/tooter9/exifor.git
 cd exifor
 cd Exifor
 pip3 install -r requirements.txt
