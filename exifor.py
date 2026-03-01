@@ -15,12 +15,15 @@ try:
     from rich.rule import Rule
     from rich.text import Text
     from rich.progress import Progress, SpinnerColumn, TextColumn
+    from rich.markup import escape
     from rich import box
 except ImportError:
     print("\n  Missing dependency — install with:  pip3 install rich\n")
     sys.exit(1)
 
 C = Console(highlight=False)
+
+EXIFOR_VERSION = "1.3.0"
 
 A = "cyan"
 G = "#00c87a"
@@ -52,15 +55,15 @@ def rule(label: str = ""):
 
 
 def ok(msg):
-    C.print(f"\n  [{G}]✓[/]  {msg}\n")
+    C.print(f"\n  [{G}]✓[/]  {escape(msg)}\n")
 
 
 def err(msg):
-    C.print(f"\n  [{R}]✗[/]  {msg}\n")
+    C.print(f"\n  [{R}]✗[/]  {escape(msg)}\n")
 
 
 def warn(msg):
-    C.print(f"\n  [{Y}]![/]  {msg}\n")
+    C.print(f"\n  [{Y}]![/]  {escape(msg)}\n")
 
 
 def pause():
@@ -69,8 +72,10 @@ def pause():
 
 
 def ask(prompt: str, default: str = "") -> str:
-    hint = f" [{D}][{default}][/]" if default else ""
-    C.print(f"  [{A}]{prompt}[/]{hint}  ", end="")
+    # FIX: escape both prompt and default so file paths / user data
+    # with "/" or "[...]" don't get parsed as Rich markup tags.
+    hint = f" [{D}]{escape(default)}[/]" if default else ""
+    C.print(f"  [{A}]{escape(prompt)}[/]{hint}  ", end="")
     val = input().strip()
     return val if val else default
 
@@ -133,24 +138,25 @@ def show_result(
     t.add_column("", style=f"bold {D}", min_width=12)
     t.add_column("", style=W, overflow="fold")
 
-    t.add_row("Action", action)
+    t.add_row("Action", escape(action))
     t.add_row("Status", f"[bold {color}]{status_icon}  {status_text}[/]")
-    t.add_row("Input", input_path)
+    t.add_row("Input", escape(input_path))
 
     if output_path:
+        # FIX: escape path so brackets/slashes in filenames don't break Rich markup
         if output_path == input_path:
-            t.add_row("Output", f"[{G}]{output_path}[/]  [{D}](modified in-place)[/]")
+            t.add_row("Output", f"[{G}]{escape(output_path)}[/]  [{D}](modified in-place)[/]")
         else:
-            t.add_row("Output", f"[{G}]{output_path}[/]")
+            t.add_row("Output", f"[{G}]{escape(output_path)}[/]")
 
     if backup_path:
         if os.path.exists(backup_path):
-            t.add_row("Backup", f"[{Y}]{backup_path}[/]")
+            t.add_row("Backup", f"[{Y}]{escape(backup_path)}[/]")
         else:
             t.add_row("Backup", f"[{R}]backup not found[/]")
 
     if extra_msg:
-        t.add_row("Details", extra_msg)
+        t.add_row("Details", escape(extra_msg))
 
     title_style = f"bold {G}" if success else f"bold {R}"
     C.print(Panel(t, title=f"[{title_style}]Result[/]", border_style=color, padding=(0, 1)))
@@ -372,15 +378,15 @@ def browse(want_dir: bool = False, title: str = "Select a file") -> Optional[str
         rows.append((f"[{D}]../  go up[/]", "up", os.path.dirname(cwd)))
 
         for d in dirs:
-            rows.append((f"[{A}]{d.name}/[/]", "dir", d.path))
+            rows.append((f"[{A}]{escape(d.name)}/[/]", "dir", d.path))
 
         for f in media:
             ext = os.path.splitext(f.name)[1].lower()
             color = Y if ext == ".zip" else G
-            rows.append((f"[{color}]{f.name}[/]  [{D}]{sz(f.path)}[/]", "file", f.path))
+            rows.append((f"[{color}]{escape(f.name)}[/]  [{D}]{sz(f.path)}[/]", "file", f.path))
 
         for f in other:
-            rows.append((f"[{D}]{f.name}  {sz(f.path)}[/]", "file", f.path))
+            rows.append((f"[{D}]{escape(f.name)}  {sz(f.path)}[/]", "file", f.path))
 
         for i, (label, kind, path) in enumerate(rows, 1):
             prefix = f"[{D}]{i:2}[/]"
@@ -457,6 +463,7 @@ def choose_output_path(src: str, suffix: str = "_clean") -> Optional[str]:
         return src
 
     if raw == "2":
+        # FIX: ask() now escapes the default path so no markup crash
         out = ask("Save copy as", default_copy)
         out = os.path.expanduser(out)
         if os.path.exists(out):
@@ -496,8 +503,11 @@ def act_view(et: ET):
             t.add_column("Value", style=W, overflow="fold")
             for k, v in vals.items():
                 s = str(v)
-                t.add_row(k, s[:160] + "…" if len(s) > 160 else s)
-            C.print(Panel(t, title=f"[bold {Y}]{group}[/]", border_style=D, padding=(0, 1)))
+                display = s[:160] + "…" if len(s) > 160 else s
+                # FIX: escape tag names and values — metadata can contain
+                # brackets like "Adobe Photoshop [version X]" which break markup
+                t.add_row(escape(k), escape(display))
+            C.print(Panel(t, title=f"[bold {Y}]{escape(group)}[/]", border_style=D, padding=(0, 1)))
 
     if not found:
         warn("No tags found")
@@ -620,12 +630,12 @@ def act_gps(et: ET):
                 t = Table(show_header=False, box=box.SIMPLE, padding=(0, 2))
                 t.add_column("", style=D, min_width=16)
                 t.add_column("", style=W)
-                t.add_row("Latitude",   f"{lat} {lat_ref}")
-                t.add_row("Longitude",  f"{lon} {lon_ref}")
-                t.add_row("Altitude",   str(alt))
-                t.add_row("Speed",      str(speed))
-                t.add_row("GPS Date",   str(gdate))
-                t.add_row("GPS Time",   str(gtime))
+                t.add_row("Latitude",   escape(f"{lat} {lat_ref}"))
+                t.add_row("Longitude",  escape(f"{lon} {lon_ref}"))
+                t.add_row("Altitude",   escape(str(alt)))
+                t.add_row("Speed",      escape(str(speed)))
+                t.add_row("GPS Date",   escape(str(gdate)))
+                t.add_row("GPS Time",   escape(str(gtime)))
                 C.print(Panel(t, border_style=D, padding=(1, 2)))
                 try:
                     lat_f = float(str(lat).split()[0]) * (-1 if lat_ref == "S" else 1)
@@ -723,7 +733,8 @@ def act_edit(et: ET):
         for i, (tag, desc) in enumerate(POPULAR_TAGS, 1):
             v = str(cur.get(tag, ""))
             v_show = v[:55] + "…" if len(v) > 55 else v
-            t.add_row(str(i), tag, desc, v_show or f"[{D}]—[/]")
+            # FIX: escape tag values so brackets in metadata don't break markup
+            t.add_row(str(i), tag, desc, escape(v_show) if v_show else f"[{D}]—[/]")
 
         C.print(Panel(t, border_style=D, padding=(0, 1)))
         C.print(f"  [{D}]c[/]  Enter a custom tag name")
@@ -754,8 +765,9 @@ def act_edit(et: ET):
 
         old = str(cur.get(tag, ""))
         if old:
-            C.print(f"\n  [{D}]Current value:[/] [{Y}]{old}[/]")
-        val = ask(f"New value for [{tag}]")
+            # FIX: escape old value so brackets don't break markup
+            C.print(f"\n  [{D}]Current value:[/] [{Y}]{escape(old)}[/]")
+        val = ask(f"New value for {tag}")
         if not val:
             warn("Empty value — skipped"); continue
         keep_backup = yesno("Keep a backup of the original?", default=False)
@@ -778,9 +790,10 @@ def _edit_multi(et: ET, path: str):
         tag = ask("Tag  (Enter to finish)").strip()
         if not tag:
             break
-        val = ask(f"Value for [{tag}]")
+        val = ask(f"Value for {tag}")
         tags[tag] = val
-        C.print(f"  [{G}]+[/]  {tag} = [{Y}]{val}[/]")
+        # FIX: escape tag and val so user-entered data with brackets doesn't crash
+        C.print(f"  [{G}]+[/]  {escape(tag)} = [{Y}]{escape(val)}[/]")
     if not tags:
         warn("No tags entered — cancelled")
         pause()
@@ -852,7 +865,8 @@ def act_zip(et: ET):
                     if count > 0:
                         dirty += 1
                     color = R if count > 0 else G
-                    t.add_row(item["file"], f"[{color}]{count}[/]")
+                    # FIX: escape filename in case it contains brackets
+                    t.add_row(escape(item["file"]), f"[{color}]{count}[/]")
                 C.print(Panel(t, border_style=D, padding=(0, 1)))
                 if dirty:
                     C.print(f"\n  [{R}]{dirty} file(s) contain metadata[/]  [{D}](total {total_tags} tags)[/]")
@@ -871,7 +885,7 @@ def act_zip(et: ET):
             except Exception as e:
                 err(f"Could not open ZIP: {e}"); pause(); continue
 
-            C.print(f"  [{D}]Archive:[/]   {os.path.basename(path)}")
+            C.print(f"  [{D}]Archive:[/]   {escape(os.path.basename(path))}")
             C.print(f"  [{D}]Files:  [/]   {file_count}")
             C.print(f"  [{D}]Size:   [/]   {sz(path)}")
 
@@ -879,6 +893,7 @@ def act_zip(et: ET):
             out_default = base + "_clean.zip"
             C.print()
             C.print(f"  [{Y}]Where to save the cleaned ZIP?[/]")
+            # FIX: ask() now escapes the default path
             out_path = ask("Output path", out_default)
             out_path = os.path.expanduser(out_path)
 
@@ -954,9 +969,10 @@ def act_folder(et: ET):
                     tag = ask("Tag  (Enter to finish)").strip()
                     if not tag:
                         break
-                    val = ask(f"Value for [{tag}]")
+                    val = ask(f"Value for {tag}")
                     tags[tag] = val
-                    C.print(f"  [{G}]+[/]  {tag} = [{Y}]{val}[/]")
+                    # FIX: escape tag/val so user-entered data doesn't break markup
+                    C.print(f"  [{G}]+[/]  {escape(tag)} = [{Y}]{escape(val)}[/]")
                 if not tags:
                     warn("No tags entered — cancelled"); continue
                 if not yesno(f"Write {len(tags)} tag(s) to all files in folder?", default=False):
@@ -994,6 +1010,7 @@ def act_export(et: ET):
 
         base = os.path.splitext(os.path.abspath(path))[0]
 
+        # FIX: ask() now escapes the default path, so no markup crash
         if raw == "1":
             out = ask("Save as", base + "_metadata.json")
         else:
@@ -1029,8 +1046,9 @@ def act_copy(et: ET):
         return
 
     header("Copy Tags")
-    C.print(f"  [{D}]From:[/]  [{Y}]{src}[/]")
-    C.print(f"  [{D}]To:  [/]  [{Y}]{dst}[/]\n")
+    # FIX: escape paths so filenames with brackets don't crash markup
+    C.print(f"  [{D}]From:[/]  [{Y}]{escape(src)}[/]")
+    C.print(f"  [{D}]To:  [/]  [{Y}]{escape(dst)}[/]\n")
 
     if not yesno("Copy metadata from source to destination?"):
         warn("Cancelled"); return
@@ -1069,7 +1087,10 @@ def main():
             ver = et.version()
         except Exception:
             ver = "?"
-        C.print(f"  [{G}]●[/] [{D}]for ExifTool {ver}[/]\n")
+
+        # Show both Exifor version and ExifTool version clearly on separate lines
+        # to avoid confusion between the two version numbers
+        C.print(f"  [{D}]Exifor {EXIFOR_VERSION}[/]  [{D}]·[/]  [{G}]ExifTool {ver}[/]\n")
 
         for key, label, _, color in MENU:
             C.print(f"  [{D}]{key}[/]  [{color}]{label}[/]")
