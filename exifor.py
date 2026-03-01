@@ -30,7 +30,7 @@ Y = "#e3cd0b"
 R = "red"
 D = "bright_black"
 W = "white"
-P = "##ed66e9"
+P = "#ed66e9"
 
 MEDIA = {
     ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".heic", ".heif",
