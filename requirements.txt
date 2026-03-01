@@ -11,7 +11,3 @@ rich>=13.0.0
 #
 # Debian / Ubuntu / Raspberry Pi:
 #   apt install libimage-exiftool-perl
-#
-# Or use the install script:
-#   bash install.sh
-# ─────────────────────────────────────────────────────────────────────────────
