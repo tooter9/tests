@@ -1,4 +1,3 @@
-
 import os
 import sys
 import json
@@ -72,8 +71,6 @@ def pause():
 
 
 def ask(prompt: str, default: str = "") -> str:
-    # FIX: escape both prompt and default so file paths / user data
-    # with "/" or "[...]" don't get parsed as Rich markup tags.
     hint = f" [{D}]{escape(default)}[/]" if default else ""
     C.print(f"  [{A}]{escape(prompt)}[/]{hint}  ", end="")
     val = input().strip()
@@ -143,7 +140,6 @@ def show_result(
     t.add_row("Input", escape(input_path))
 
     if output_path:
-        # FIX: escape path so brackets/slashes in filenames don't break Rich markup
         if output_path == input_path:
             t.add_row("Output", f"[{G}]{escape(output_path)}[/]  [{D}](modified in-place)[/]")
         else:
@@ -463,7 +459,6 @@ def choose_output_path(src: str, suffix: str = "_clean") -> Optional[str]:
         return src
 
     if raw == "2":
-        # FIX: ask() now escapes the default path so no markup crash
         out = ask("Save copy as", default_copy)
         out = os.path.expanduser(out)
         if os.path.exists(out):
@@ -504,8 +499,6 @@ def act_view(et: ET):
             for k, v in vals.items():
                 s = str(v)
                 display = s[:160] + "…" if len(s) > 160 else s
-                # FIX: escape tag names and values — metadata can contain
-                # brackets like "Adobe Photoshop [version X]" which break markup
                 t.add_row(escape(k), escape(display))
             C.print(Panel(t, title=f"[bold {Y}]{escape(group)}[/]", border_style=D, padding=(0, 1)))
 
@@ -733,7 +726,6 @@ def act_edit(et: ET):
         for i, (tag, desc) in enumerate(POPULAR_TAGS, 1):
             v = str(cur.get(tag, ""))
             v_show = v[:55] + "…" if len(v) > 55 else v
-            # FIX: escape tag values so brackets in metadata don't break markup
             t.add_row(str(i), tag, desc, escape(v_show) if v_show else f"[{D}]—[/]")
 
         C.print(Panel(t, border_style=D, padding=(0, 1)))
@@ -765,7 +757,6 @@ def act_edit(et: ET):
 
         old = str(cur.get(tag, ""))
         if old:
-            # FIX: escape old value so brackets don't break markup
             C.print(f"\n  [{D}]Current value:[/] [{Y}]{escape(old)}[/]")
         val = ask(f"New value for {tag}")
         if not val:
@@ -792,7 +783,6 @@ def _edit_multi(et: ET, path: str):
             break
         val = ask(f"Value for {tag}")
         tags[tag] = val
-        # FIX: escape tag and val so user-entered data with brackets doesn't crash
         C.print(f"  [{G}]+[/]  {escape(tag)} = [{Y}]{escape(val)}[/]")
     if not tags:
         warn("No tags entered — cancelled")
@@ -865,7 +855,6 @@ def act_zip(et: ET):
                     if count > 0:
                         dirty += 1
                     color = R if count > 0 else G
-                    # FIX: escape filename in case it contains brackets
                     t.add_row(escape(item["file"]), f"[{color}]{count}[/]")
                 C.print(Panel(t, border_style=D, padding=(0, 1)))
                 if dirty:
@@ -893,9 +882,13 @@ def act_zip(et: ET):
             out_default = base + "_clean.zip"
             C.print()
             C.print(f"  [{Y}]Where to save the cleaned ZIP?[/]")
-            # FIX: ask() now escapes the default path
             out_path = ask("Output path", out_default)
             out_path = os.path.expanduser(out_path)
+
+            if os.path.abspath(out_path) == os.path.abspath(path):
+                err("Output path cannot be the same as the input ZIP — choose a different filename")
+                pause()
+                continue
 
             if os.path.exists(out_path):
                 if not yesno(f"{os.path.basename(out_path)} already exists. Overwrite?", default=False):
@@ -944,7 +937,7 @@ def act_folder(et: ET):
             continue
 
         ext_s = ask("File extensions to include  (e.g. jpg,png — or Enter for all files)", "")
-        exts  = [e.strip().lower() for e in ext_s.split(",")] if ext_s.strip() else None
+        exts  = [e for e in (e.strip().lower() for e in ext_s.split(",")) if e] if ext_s.strip() else None
         keep_backup = yesno("Keep backup copies of originals?", default=False)
 
         try:
@@ -971,7 +964,6 @@ def act_folder(et: ET):
                         break
                     val = ask(f"Value for {tag}")
                     tags[tag] = val
-                    # FIX: escape tag/val so user-entered data doesn't break markup
                     C.print(f"  [{G}]+[/]  {escape(tag)} = [{Y}]{escape(val)}[/]")
                 if not tags:
                     warn("No tags entered — cancelled"); continue
@@ -1010,7 +1002,6 @@ def act_export(et: ET):
 
         base = os.path.splitext(os.path.abspath(path))[0]
 
-        # FIX: ask() now escapes the default path, so no markup crash
         if raw == "1":
             out = ask("Save as", base + "_metadata.json")
         else:
@@ -1046,7 +1037,6 @@ def act_copy(et: ET):
         return
 
     header("Copy Tags")
-    # FIX: escape paths so filenames with brackets don't crash markup
     C.print(f"  [{D}]From:[/]  [{Y}]{escape(src)}[/]")
     C.print(f"  [{D}]To:  [/]  [{Y}]{escape(dst)}[/]\n")
 
@@ -1088,8 +1078,6 @@ def main():
         except Exception:
             ver = "?"
 
-        # Show both Exifor version and ExifTool version clearly on separate lines
-        # to avoid confusion between the two version numbers
         C.print(f"  [{D}]Exifor {EXIFOR_VERSION}[/]  [{D}]·[/]  [{G}]ExifTool {ver}[/]\n")
 
         for key, label, _, color in MENU:
