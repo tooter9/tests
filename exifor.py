@@ -30,6 +30,7 @@ Y = "yellow"
 R = "red"
 D = "bright_black"
 W = "white"
+P = "Pink"
 
 MEDIA = {
     ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".heic", ".heif",
@@ -96,8 +97,7 @@ def spin(label: str) -> Progress:
 def header(title: str = "", sub: str = ""):
     clear()
     t = Text()
-    t.append("  Exifor", style=f"bold {A}")
-    t.append("  —  ExifTool Manager", style=W)
+    t.append("  ExiFor", style=f"bold {A}")
     if title:
         t.append(f"  ·  {title}", style=f"{Y}")
     if sub:
@@ -165,9 +165,6 @@ class ET:
             err(
                 "ExifTool not found.\n\n"
                 "  Install it first:\n"
-                "    iSH / Alpine:  apk add exiftool\n"
-                "    macOS:         brew install exiftool\n"
-                "    Debian/Ubuntu: apt install libimage-exiftool-perl"
             )
             sys.exit(1)
 
@@ -392,7 +389,7 @@ def browse(want_dir: bool = False, title: str = "Select a file") -> Optional[str
         if want_dir:
             C.print(f"  [{G}]S[/]   Select current folder")
         C.print(f"  [{D}]p[/]   Enter path manually")
-        C.print(f"  [{D}]0[/]   Cancel / Back")
+        C.print(f"  [{D}]0[/]   Back")
         rule()
 
         C.print(f"  [{A}]→[/]  ", end="")
@@ -640,7 +637,7 @@ def act_gps(et: ET):
 
         elif raw == "2":
             C.print(f"\n  [{D}]Decimal degrees. + = North/East, − = South/West[/]")
-            C.print(f"  [{D}]Example: New York = 40.7128, -74.0060[/]\n")
+            C.print(f"  [{D}]Example: Epstein Island = 18.3002, -64.8252[/]\n")
             try:
                 lat_s = ask("Latitude   (−90 to 90)")
                 if not lat_s:
@@ -804,11 +801,11 @@ def act_zip(et: ET):
     while True:
         header("ZIP Cleaner", "Strip metadata from every file inside a ZIP archive")
         C.print(f"  [{Y}]How it works:[/]")
-        C.print(f"  [{D}]  1. Select a ZIP file[/]")
-        C.print(f"  [{D}]  2. Files are extracted to a temporary folder[/]")
-        C.print(f"  [{D}]  3. ExifTool strips all metadata from each file[/]")
-        C.print(f"  [{D}]  4. Files are repacked into a clean new ZIP[/]")
-        C.print(f"  [{D}]  5. Temporary folder is removed[/]")
+        C.print(f"  [{D}]  Select a ZIP file[/]")
+        C.print(f"  [{D}]  Files are extracted to a temporary folder[/]")
+        C.print(f"  [{D}]  ExifTool strips all metadata from each file[/]")
+        C.print(f"  [{D}]  Files are repacked into a clean new ZIP[/]")
+        C.print(f"  [{D}]  Temporary folder is removed[/]")
         C.print()
         C.print(f"  [{D}]1[/]  Clean ZIP  (remove ALL metadata from every file)")
         C.print(f"  [{D}]2[/]  Inspect ZIP  (check which files have metadata)")
@@ -1057,14 +1054,14 @@ def act_copy(et: ET):
 
 
 MENU = [
-    ("1", "View metadata",                    act_view,   W),
-    ("2", "Strip metadata  (privacy)",        act_strip,  R),
-    ("3", "ZIP Cleaner  —  clean archive",    act_zip,    Y),
-    ("4", "GPS  —  view / edit / remove",     act_gps,    A),
-    ("5", "Edit tags",                        act_edit,   W),
-    ("6", "Folder batch  (all files)",        act_folder, W),
-    ("7", "Export metadata  (JSON / CSV)",    act_export, W),
-    ("8", "Copy tags between files",          act_copy,   W),
+    ("1", "View MetaData",                    act_view,   P),
+    ("2", "Strip MetaData",                   act_strip,  R),
+    ("3", "ZIP MetaData",                     act_zip,    A),
+    ("4", "GPS MetaData",                     act_gps,    Y),
+    ("5", "Edit File Tags",                   act_edit,   W),
+    ("6", "Batch Folder Processing",          act_folder, W),
+    ("7", "Export MetaData",                  act_export, W),
+    ("8", "Copy Tags Between Files",          act_copy,   W),
 ]
 
 
