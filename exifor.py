@@ -30,7 +30,7 @@ Y = "yellow"
 R = "red"
 D = "bright_black"
 W = "white"
-P = "Pink"
+P = "#008000"
 
 MEDIA = {
     ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".heic", ".heif",
