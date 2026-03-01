@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Exifor — Privacy-first metadata manager for iSH (iOS) and any Unix terminal.
-Wraps system ExifTool. No logs. No traces. No command-line args needed.
-Just run: python3 exifor.py
-"""
 
 import os
 import sys
@@ -83,7 +77,10 @@ def ask(prompt: str, default: str = "") -> str:
 
 def yesno(prompt: str, default: bool = True) -> bool:
     hint = "Y/n" if default else "y/N"
-    C.print(f"  [{D}]{prompt} [{hint}][/]  ", end="")
+    text = Text()
+    text.append("  ")
+    text.append(f"{prompt}  [{hint}]  ", style=D)
+    C.print(text, end="")
     v = input().strip().lower()
     if not v:
         return default
@@ -128,7 +125,6 @@ def show_result(
     backup_path: Optional[str] = None,
     extra_msg: str = "",
 ):
-    """Display a clear result panel showing what happened, where files went."""
     color = G if success else R
     status_icon = "✓" if success else "✗"
     status_text = "Success" if success else "Failed"
@@ -147,10 +143,11 @@ def show_result(
         else:
             t.add_row("Output", f"[{G}]{output_path}[/]")
 
-    if backup_path and os.path.exists(backup_path):
-        t.add_row("Backup", f"[{Y}]{backup_path}[/]")
-    elif backup_path:
-        t.add_row("Backup", f"[{D}]none (overwrite_original)[/]")
+    if backup_path:
+        if os.path.exists(backup_path):
+            t.add_row("Backup", f"[{Y}]{backup_path}[/]")
+        else:
+            t.add_row("Backup", f"[{R}]backup not found[/]")
 
     if extra_msg:
         t.add_row("Details", extra_msg)
@@ -216,7 +213,6 @@ class ET:
         return self._run(args + ["--", path])
 
     def strip_all_to(self, src: str, dst: str) -> str:
-        """Copy file to dst then strip all metadata there (leaves src untouched)."""
         shutil.copy2(src, dst)
         return self._run(["-all=", "-overwrite_original", "--", dst])
 
@@ -355,11 +351,6 @@ class ET:
 
 
 def browse(want_dir: bool = False, title: str = "Select a file") -> Optional[str]:
-    """
-    Interactive file/folder browser.
-    Returns selected path, or None if cancelled.
-    Press 0 at any time to cancel and return to the main menu.
-    """
     cwd = os.getcwd()
 
     while True:
@@ -378,7 +369,6 @@ def browse(want_dir: bool = False, title: str = "Select a file") -> Optional[str
         other = [e for e in files if e not in media]
 
         rows = []
-
         rows.append((f"[{D}]../  go up[/]", "up", os.path.dirname(cwd)))
 
         for d in dirs:
@@ -392,7 +382,7 @@ def browse(want_dir: bool = False, title: str = "Select a file") -> Optional[str
         for f in other:
             rows.append((f"[{D}]{f.name}  {sz(f.path)}[/]", "file", f.path))
 
-        for i, (label, kind, path) in enumerate(rows):
+        for i, (label, kind, path) in enumerate(rows, 1):
             prefix = f"[{D}]{i:2}[/]"
             C.print(f"  {prefix}  {label}")
 
@@ -400,7 +390,7 @@ def browse(want_dir: bool = False, title: str = "Select a file") -> Optional[str
         if want_dir:
             C.print(f"  [{G}]S[/]   Select current folder")
         C.print(f"  [{D}]p[/]   Enter path manually")
-        C.print(f"  [{D}]0[/]   Cancel / Back to main menu")
+        C.print(f"  [{D}]0[/]   Cancel / Back")
         rule()
 
         C.print(f"  [{A}]→[/]  ", end="")
@@ -425,11 +415,16 @@ def browse(want_dir: bool = False, title: str = "Select a file") -> Optional[str
 
         try:
             idx = int(raw)
-            if idx < 0 or idx >= len(rows):
+            if idx < 1 or idx > len(rows):
                 raise ValueError
-            label, kind, path = rows[idx]
+            label, kind, path = rows[idx - 1]
             if kind == "up":
-                cwd = path
+                parent = os.path.dirname(cwd)
+                if parent == cwd:
+                    warn("Already at root")
+                    pause()
+                else:
+                    cwd = parent
             elif kind == "dir":
                 cwd = path
             elif kind == "file":
@@ -444,10 +439,6 @@ def browse(want_dir: bool = False, title: str = "Select a file") -> Optional[str
 
 
 def choose_output_path(src: str, suffix: str = "_clean") -> Optional[str]:
-    """
-    Ask the user where to save the output file.
-    Returns the chosen path, or None if cancelled.
-    """
     base, ext = os.path.splitext(os.path.abspath(src))
     default_copy = base + suffix + ext
 
@@ -469,8 +460,9 @@ def choose_output_path(src: str, suffix: str = "_clean") -> Optional[str]:
         out = ask("Save copy as", default_copy)
         out = os.path.expanduser(out)
         if os.path.exists(out):
-            if not yesno(f"[{Y}]{os.path.basename(out)} already exists. Overwrite?[/]", default=False):
-                warn("Cancelled"); return None
+            if not yesno(f"{os.path.basename(out)} already exists. Overwrite?", default=False):
+                warn("Cancelled")
+                return None
         return out
 
     err("Invalid choice — enter 1, 2, or 0")
@@ -541,14 +533,14 @@ def act_strip(et: ET):
         backup_path = None
 
         if not save_as_copy:
-            keep_backup = yesno("Keep a backup of the original? [y/N]", default=False)
+            keep_backup = yesno("Keep a backup of the original?", default=False)
             backup_path = path + "_original" if keep_backup else None
         else:
             keep_backup = False
 
         try:
             if raw == "1":
-                if not yesno(f"[{R}]Remove ALL tags from this file? This cannot be undone.[/]", default=False):
+                if not yesno("Remove ALL tags from this file? This cannot be undone.", default=False):
                     warn("Cancelled"); pause(); continue
                 with spin("Removing all metadata...") as p:
                     p.add_task("", total=None)
@@ -809,11 +801,11 @@ def act_zip(et: ET):
     while True:
         header("ZIP Cleaner", "Strip metadata from every file inside a ZIP archive")
         C.print(f"  [{Y}]How it works:[/]")
-        C.print(f"  [{D}]  1. You pick a ZIP file[/]")
-        C.print(f"  [{D}]  2. All files are extracted to a hidden temp folder[/]")
-        C.print(f"  [{D}]  3. ExifTool strips metadata from each file[/]")
-        C.print(f"  [{D}]  4. Files are repacked into a brand-new clean ZIP[/]")
-        C.print(f"  [{D}]  5. Temp folder is deleted immediately — no traces[/]")
+        C.print(f"  [{D}]  1. Select a ZIP file[/]")
+        C.print(f"  [{D}]  2. Files are extracted to a temporary folder[/]")
+        C.print(f"  [{D}]  3. ExifTool strips all metadata from each file[/]")
+        C.print(f"  [{D}]  4. Files are repacked into a clean new ZIP[/]")
+        C.print(f"  [{D}]  5. Temporary folder is removed[/]")
         C.print()
         C.print(f"  [{D}]1[/]  Clean ZIP  (remove ALL metadata from every file)")
         C.print(f"  [{D}]2[/]  Inspect ZIP  (check which files have metadata)")
@@ -891,7 +883,7 @@ def act_zip(et: ET):
             out_path = os.path.expanduser(out_path)
 
             if os.path.exists(out_path):
-                if not yesno(f"[{Y}]{os.path.basename(out_path)} already exists. Overwrite?[/]", default=False):
+                if not yesno(f"{os.path.basename(out_path)} already exists. Overwrite?", default=False):
                     warn("Cancelled"); continue
 
             C.print()
@@ -942,7 +934,7 @@ def act_folder(et: ET):
 
         try:
             if raw == "1":
-                if not yesno(f"[{R}]Remove ALL metadata from ALL files in this folder?[/]", default=False):
+                if not yesno("Remove ALL metadata from ALL files in this folder?", default=False):
                     warn("Cancelled"); continue
                 with spin("Processing folder...") as p:
                     p.add_task("", total=None)
@@ -978,7 +970,6 @@ def act_folder(et: ET):
             show_result(False, "Folder batch operation", folder, folder, None, str(e))
 
         pause()
-        continue
 
 
 def act_export(et: ET):
@@ -1078,7 +1069,7 @@ def main():
             ver = et.version()
         except Exception:
             ver = "?"
-        C.print(f"  [{G}]●[/] ExifTool {ver}  [{D}]|[/]  [{D}]No logs. No traces. 100% local.[/]\n")
+        C.print(f"  [{G}]●[/] [{D}]for ExifTool {ver}[/]\n")
 
         for key, label, _, color in MENU:
             C.print(f"  [{D}]{key}[/]  [{color}]{label}[/]")
@@ -1089,7 +1080,7 @@ def main():
         C.print(f"  [{A}]→[/]  ", end="")
         raw = input().strip().lower()
 
-        if raw in ("q", "quit", "exit", "0"):
+        if raw in ("q", "quit", "exit"):
             clear()
             C.print(f"\n  [{D}]Goodbye![/]\n")
             sys.exit(0)
