@@ -1,6 +1,5 @@
 # Python dependencies for Exifor
 rich>=13.0.0
-exiftool>=12.50
 # ─────────────────────────────────────────────────────────────────────────────
 # SYSTEM DEPENDENCY — ExifTool (NOT a pip package, must be installed separately)
 # ─────────────────────────────────────────────────────────────────────────────
