@@ -24,14 +24,13 @@ C = Console(highlight=False)
 
 EXIFOR_VERSION = "1.3.0"
 
-A = "#00E5FF"
-G = "#00D26A"
-Y = "#FFD400"
-R = "#FF3B3F"
-D = "#1E1E2E"
-W = "#F8F9FA"
-P = "#FF4FD8"
-T = "#00B3B8"
+A = "cyan"
+G = "#00c87a"
+Y = "#e3cd0b"
+R = "red"
+D = "bright_black"
+W = "white"
+P = "##ed66e9"
 
 MEDIA = {
     ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".heic", ".heif",
@@ -1060,9 +1059,9 @@ MENU = [
     ("3", "ZIP MetaData",                     act_zip,    R),
     ("4", "GPS MetaData",                     act_gps,    R),
     ("5", "Edit File Tags",                   act_edit,   Y),
-    ("6", "Batch Folder Processing",          act_folder, T),
-    ("7", "Export MetaData",                  act_export, A),
-    ("8", "Copy Tags Between Files",          act_copy,   G),
+    ("6", "Batch Folder Processing",          act_folder, W),
+    ("7", "Export MetaData",                  act_export, W),
+    ("8", "Copy Tags Between Files",          act_copy,   W),
 ]
 
 
