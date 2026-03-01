@@ -1,0 +1,18 @@
+# Python dependencies for Exifor
+rich>=13.0.0
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SYSTEM DEPENDENCY — ExifTool (NOT a pip package, must be installed separately)
+# ─────────────────────────────────────────────────────────────────────────────
+# iSH / Alpine Linux:
+#   apk add exiftool
+#
+# macOS (Homebrew):
+#   brew install exiftool
+#
+# Debian / Ubuntu / Raspberry Pi:
+#   apt install libimage-exiftool-perl
+#
+# Or use the install script:
+#   bash install.sh
+# ─────────────────────────────────────────────────────────────────────────────

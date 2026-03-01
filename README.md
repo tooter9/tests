@@ -1,95 +1,114 @@
 # Exifor — ExifTool Manager
 
-Удобный менеджер метаданных для **iSH (iOS)** и любого Unix-терминала.
-Красивый интерактивный интерфейс поверх системного `exiftool`.
+A clean, privacy-first metadata manager for **iSH (iOS)** and any Unix terminal.
+Beautiful interactive menu on top of the system `exiftool`.
 
-**Без логов. Без следов. Без сложных команд.**
+**No logs. No traces. No complex commands.**
 
 ---
 
-## Установка
+## Install
 
 ```sh
 git clone https://github.com/tooter9/exifor.git
 cd exifor
-cd Exifor
+```
+
+Install ExifTool for your system:
+
+| Platform | Command |
+|---|---|
+| iSH / Alpine Linux | `apk add exiftool` |
+| macOS (Homebrew) | `brew install exiftool` |
+| Debian / Ubuntu | `apt install libimage-exiftool-perl` |
+| Fedora / RHEL | `dnf install perl-Image-ExifTool` |
+
+Install Python dependencies:
+
+```sh
 pip3 install -r requirements.txt
 ```
 
-Если проблемы на современном Python:
+If you get an error on newer Python:
 
 ```sh
-pip install -r requirements.txt --break-system-packages
-```
-
-Установи ExifTool в iSH (если ещё не установлен):
-
-```sh
-apk add exiftool
+pip3 install -r requirements.txt --break-system-packages
 ```
 
 ---
 
-## Запуск
+## Run
 
 ```sh
 python3 exifor.py
 ```
 
-Всё. Откроется меню — дальше только цифры.
+The interactive menu opens — navigate with numbers. Press **0** at any step to go back.
 
 ---
 
-## Возможности
+## Features
 
-| # | Функция | Описание |
-|---|---------|----------|
-| 1 | Просмотр метаданных | Все теги файла, сгруппированные |
-| 2 | Очистка метаданных | Удалить всё / GPS / один тег |
-| 3 | **ZIP Cleaner** | Очистить метаданные у ВСЕХ файлов внутри ZIP архива |
-| 4 | GPS | Посмотреть координаты (+ ссылка Google Maps), изменить, удалить |
-| 5 | Редактировать теги | Список популярных тегов с текущими значениями, выбор по номеру |
-| 6 | Папка целиком | Пакетная обработка всей директории |
-| 7 | Экспорт | Сохранить метаданные в JSON или CSV |
-| 8 | Копировать теги | Перенести теги из одного файла в другой |
-
----
-
-## ZIP Cleaner — уникальная функция
-
-Позволяет обработать ZIP архив целиком:
-
-1. Выбираешь ZIP файл
-2. Инструмент распаковывает его во временную скрытую папку
-3. ExifTool удаляет метаданные у каждого файла
-4. Все файлы упаковываются обратно в новый чистый ZIP
-5. Временная папка удаляется без следа
-
-Оригинальный ZIP **не трогается**. Ты получаешь новый чистый файл рядом с ним.
-
-Также есть режим **Проверить ZIP** — покажет сколько тегов у каждого файла внутри.
+| # | Feature | Description |
+|---|---------|-------------|
+| 1 | View metadata | All tags grouped by category |
+| 2 | **Strip metadata** | Remove all / GPS only / one tag — choose output location |
+| 3 | **ZIP Cleaner** | Strip metadata from every file inside a ZIP archive |
+| 4 | GPS | View coordinates (+ Google Maps link), edit, or remove |
+| 5 | Edit tags | Choose from popular tags or enter custom tag names |
+| 6 | Folder batch | Process an entire directory at once |
+| 7 | Export | Save metadata to JSON or CSV |
+| 8 | Copy tags | Transfer metadata from one file to another |
 
 ---
 
-## Приватность
+## What's improved in this version
 
-- Никаких логов и истории файлов
-- Временные папки удаляются сразу после обработки
-- Используется **системный ExifTool** — без уязвимостей самописного парсера
-- Все операции выполняются локально, без интернета
+- **Full English interface** — all menus, prompts and messages in English
+- **Clear result panel** — every operation shows: status (success/fail), input file path, output file path, backup path
+- **Output location choice** — for single-file strip you choose: overwrite in-place OR save as a new copy (original untouched)
+- **Backup location shown** — when you keep a backup, the tool shows exactly where it was saved (`filename.ext_original`)
+- **0 = back at every step** — press 0 at any prompt to return to the main menu immediately
+- **Simplified flow** — cleaner step-by-step sequence for every operation
+- **Fixed folder navigation** — no double `cd` needed; everything is at the repo root
 
 ---
 
-## Зависимости
+## ZIP Cleaner
+
+Processes a whole ZIP archive:
+
+1. You pick a ZIP file
+2. Files are extracted to a hidden temp folder
+3. ExifTool strips all metadata
+4. Files are repacked into a clean new ZIP
+5. Temp folder is deleted immediately — no traces
+
+The original ZIP is **never modified**. You choose where the clean ZIP is saved.
+Also includes an **Inspect** mode that shows exactly which files inside the ZIP contain metadata.
+
+---
+
+## Privacy
+
+- No history or log files ever written
+- Temp folders deleted immediately after use
+- Uses the **system ExifTool binary** — no custom parser vulnerabilities
+- All processing is local — no internet connection required
+
+---
+
+## Requirements
 
 - Python 3.8+
-- ExifTool (`apk add exiftool` в iSH / Alpine)
-- rich 13.0+ (единственная Python-зависимость)
+- ExifTool (system package — see install instructions above)
+- rich 13.0+ (only Python dependency — installed via pip)
 
 ---
 
-## Поддерживаемые форматы
+## Supported Formats
 
-Все форматы ExifTool: JPEG, PNG, HEIC, TIFF, GIF, WebP, RAW (CR2/CR3/NEF/ARW),
-MP4, MOV, AVI, MKV, MP3, FLAC, PDF, DOCX, XLSX и многие другие.
-В ZIP может быть любая комбинация.
+All formats supported by ExifTool:
+JPEG, PNG, HEIC, TIFF, GIF, WebP, RAW (CR2/CR3/NEF/ARW/DNG),
+MP4, MOV, AVI, MKV, MP3, FLAC, M4A, WAV, AAC,
+PDF, DOCX, XLSX, PPTX, ZIP and many more.
